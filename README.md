@@ -100,7 +100,7 @@ It is carried with this standalone project;normal Rebuild needs no Tool checkout
 | `rh850_can.c/.h` | Classical wrapper over the shared multi-port IRQ/queue/TX core |
 | `custom_func.c` | Main-loop protocol dispatch and UART trace; OSTM0 tick |
 | `hal/can/can_service.c/.h`, `rs_canfd*` | Shared v4 queues,TX events,validation and register driver |
-| `hal/can/can_config.c`, `can_board.c` | Exact protocol filters and EVM684/16MHz pin/clock/INTC adapter |
+| `hal/can/can_config.c`, `hal/can/can_board.c` | Exact protocol filters and EVM684/16MHz pin/clock/INTC adapter |
 | `generated_projection/device_vectors.c` | Complete 512-entry INTBP table; unused entries share one handler |
 | `boot.asm` / `cstart.asm` | Reset, ECC RAM initialization, INTBP and C runtime |
 
