@@ -6,6 +6,26 @@
 #include "r_smc_entry.h"
 #include "custom_func.h"
 #include "retarget.h"
+#define UART0_CONSOLE_RH850 1
+static void Uart0ConsoleReset(void)
+{
+    unsigned char retry;
+    DI();
+    for (retry = 0U; retry < 4U; ++retry)
+    {
+        WPROTR.PROTCMD0 = 0xA5U;
+        RESCTL.SWRESA = 1UL;
+        RESCTL.SWRESA = ~1UL;
+        RESCTL.SWRESA = 1UL;
+        __syncp();
+    }
+    for (;;)
+    {
+        NOP();
+    }
+}
+#define UART0_CONSOLE_RESET() Uart0ConsoleReset()
+#include "uart0_reset_console.inc"
 #include "can_transfer_config.h"
 #include "can_transfer_protocol.h"
 #include "rh850_can.h"
@@ -97,7 +117,7 @@ void hardware_init(void)
     g_millis = 0UL;
     DI();
     R_Config_UART0_Start();
-    /* The diagnostic UART is polled TX only; no RX address is armed. */
+    /* UART0 RX/TX are polled; generated UART IRQs remain masked. */
     INTC2.ICRLIN30UR0.BIT.MKRLIN30UR0 = 1U;
     INTC2.ICRLIN30UR1.BIT.MKRLIN30UR1 = 1U;
     INTC2.ICRLIN30UR2.BIT.MKRLIN30UR2 = 1U;
@@ -116,6 +136,7 @@ void hardware_init(void)
     }
     tiny_printf("\r\nClassical 500K request=0x710 response=0x711; per-port FIFO IRQ\r\n");
     tiny_printf("%s", (g_ready != 0U) ? "CAN init: OK\r\n" : "CAN init: FAILED\r\n");
+    tiny_printf("UART0 console: z/Z reset\r\n");
 }
 
 /* Foreground service point called repeatedly by the selected main adapter.
@@ -130,6 +151,8 @@ void loop(void)
     uint8_t response[8], channel, errors;
     uint32_t status;
     uint16_t invalid;
+
+    Uart0ResetPoll();
     if (g_ready == 0U)
     {
         return;
